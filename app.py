@@ -5,8 +5,9 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -92,7 +93,7 @@ def predict_ui():
         explanation=explanation
     )
 
-# ---------------- PDF REPORT ----------------
+# ---------------- PDF REPORT (FINAL CORPORATE) ----------------
 @app.route('/download_report')
 def download_report():
     df = pd.read_csv(LOG_FILE)
@@ -105,17 +106,16 @@ def download_report():
     pie_path = "pie.png"
     bar_path = "bar.png"
 
-    # Pie chart
+    # PIE CHART
     plt.figure()
-    plt.pie([fraud, safe], labels=["Fraud","Safe"], autopct='%1.1f%%')
-    plt.title("Fraud Distribution")
+    plt.pie([fraud, safe], labels=["Fraud","Safe"], autopct='%1.1f%%',
+            colors=["#ef4444","#22c55e"])
     plt.savefig(pie_path)
     plt.close()
 
-    # Bar chart
+    # BAR CHART
     plt.figure()
-    plt.bar(["Fraud","Safe"], [fraud, safe])
-    plt.title("Transaction Comparison")
+    plt.bar(["Fraud","Safe"], [fraud,safe], color=["#ef4444","#22c55e"])
     plt.savefig(bar_path)
     plt.close()
 
@@ -126,66 +126,101 @@ def download_report():
 
     content = []
 
-    # TITLE
-    content.append(Paragraph("<b>Fraud Detection Report</b>", styles['Title']))
+    from datetime import datetime
+
+    # HEADER
+    content.append(Paragraph("<b>Fraud Detection System - Corporate Report</b>", styles['Heading1']))
+    content.append(Paragraph("Financial Transaction Analysis Dashboard", styles['Normal']))
+    content.append(Spacer(1, 10))
+
+    content.append(Paragraph(
+        f"Generated on: {datetime.now().strftime('%d %B %Y, %H:%M')}",
+        styles['Normal']))
     content.append(Spacer(1, 15))
 
-    # INTRO
-    content.append(Paragraph(
-        "This report provides an overview of transaction analysis performed by the Fraud Detection System.",
-        styles['Normal']))
-    content.append(Spacer(1, 20))
+    # WIDE TABLE
+    table_data = [
+        ["Metric", "Description", "Value"],
+        ["Total Transactions", "All processed transactions in system", total],
+        ["Fraud Transactions", "Transactions flagged as suspicious", fraud],
+        ["Safe Transactions", "Transactions considered normal", safe],
+        ["Fraud Percentage", "Fraud ratio in total transactions", f"{round(percent,2)}%"]
+    ]
 
-    # SUMMARY
-    content.append(Paragraph("<b>Summary</b>", styles['Heading2']))
-    content.append(Spacer(1, 10))
+    table = Table(table_data, colWidths=[150, 250, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,0),colors.HexColor("#1e3a8a")),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.white),
+        ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('GRID',(0,0),(-1,-1),0.5,colors.grey),
+        ('BACKGROUND',(0,1),(-1,-1),colors.whitesmoke)
+    ]))
 
-    content.append(Paragraph(f"Total Transactions: {total}", styles['Normal']))
-    content.append(Paragraph(f"Fraud Transactions: {fraud}", styles['Normal']))
-    content.append(Paragraph(f"Safe Transactions: {safe}", styles['Normal']))
-    content.append(Paragraph(f"Fraud Percentage: {round(percent,2)}%", styles['Normal']))
+    content.append(table)
+    content.append(Spacer(1, 15))
 
-    content.append(Spacer(1, 20))
+    # CHARTS SIDE-BY-SIDE
+    chart_table = Table([
+        [
+            Image(pie_path, width=230, height=150),
+            Image(bar_path, width=230, height=150)
+        ]
+    ], colWidths=[260, 260])
 
-    # CHARTS
-    content.append(Paragraph("<b>Visual Analytics</b>", styles['Heading2']))
-    content.append(Spacer(1, 10))
+    content.append(chart_table)
+    content.append(Spacer(1, 15))
 
-    content.append(Image(pie_path, width=300, height=200))
-    content.append(Spacer(1, 10))
-    content.append(Image(bar_path, width=300, height=200))
-
-    content.append(Spacer(1, 20))
-
-    # ANALYSIS
-    content.append(Paragraph("<b>Analysis</b>", styles['Heading2']))
-    content.append(Spacer(1, 10))
-
+    # INSIGHT
     if percent > 50:
-        msg = "High fraud activity detected. Immediate monitoring recommended."
+        msg = "High fraud activity detected. Immediate monitoring and investigation is strongly recommended."
+        bg = colors.HexColor("#fee2e2")
     else:
-        msg = "Fraud levels are within acceptable limits."
+        msg = "Fraud levels are within acceptable limits and system behavior appears stable."
+        bg = colors.HexColor("#dcfce7")
 
-    content.append(Paragraph(msg, styles['Normal']))
+    insight = Table([[msg]], colWidths=[500])
+    insight.setStyle(TableStyle([
+        ('BACKGROUND',(0,0),(-1,-1),bg),
+        ('BOX',(0,0),(-1,-1),1,colors.black),
+        ('PADDING',(0,0),(-1,-1),10)
+    ]))
 
-    content.append(Spacer(1, 20))
+    content.append(insight)
+    content.append(Spacer(1, 15))
 
-    # CONCLUSION
-    content.append(Paragraph("<b>Conclusion</b>", styles['Heading2']))
+    # ABOUT PROJECT
+    content.append(Paragraph("<b>About This Project</b>", styles['Heading2']))
     content.append(Spacer(1, 10))
 
-    content.append(Paragraph(
-        "The system uses machine learning techniques to identify suspicious transactions "
-        "based on behavioral patterns such as amount, location, and past history.",
-        styles['Normal']))
+    points = [
+        "• This project implements a Machine Learning-based system to detect fraudulent transactions in real-time.",
+        "• It analyzes multiple behavioral factors such as transaction amount, location, device type, and past history.",
+        "• The system uses a trained classification model to distinguish between safe and fraudulent transactions.",
+        "• A web-based dashboard is provided to interact with the system and perform live transaction analysis.",
+        "• Visual analytics such as charts and summaries help in understanding fraud trends effectively.",
+        "• Automated PDF reports are generated to support monitoring and decision-making processes.",
+        "• The system design is inspired by real-world banking and financial fraud detection mechanisms.",
+        "• Built using Python, Flask, Scikit-learn, and data visualization tools."
+    ]
 
-    content.append(Spacer(1, 30))
+    for p in points:
+        content.append(Paragraph(p, styles['Normal']))
+        content.append(Spacer(1, 4))
 
+    # FOOTER
+    content.append(Spacer(1, 10))
     content.append(Paragraph(
-        "Generated by Fraud Detection System",
+        "Confidential Report | Fraud Detection System ",
         styles['Italic']))
 
-    doc.build(content)
+    # BORDER
+    def draw_border(canvas, doc):
+        canvas.setStrokeColor(colors.grey)
+        canvas.setLineWidth(2)
+        canvas.rect(20, 20, 570, 800)
+
+    doc.build(content, onFirstPage=draw_border)
 
     return send_file(file, as_attachment=True)
 
