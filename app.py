@@ -52,6 +52,36 @@ def home():
         explanation=None
     )
 
+# ---------------- INSIGHTS PAGE ----------------
+@app.route('/insights')
+def insights():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    df = pd.read_csv(LOG_FILE)
+
+    fraud = len(df[df['result']=="Fraud"])
+    safe = len(df[df['result']=="Safe"])
+    total = fraud + safe
+    percent = (fraud/total*100) if total>0 else 0
+
+    return render_template("insights.html",
+        fraud=fraud,
+        safe=safe,
+        total=total,
+        percent=round(percent,2)
+    )
+
+
+# ---------------- ABOUT PAGE ----------------
+@app.route('/about')
+def about():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    return render_template("about.html")
+
+
 # ---------------- PREDICT ----------------
 @app.route('/predict_ui', methods=['POST'])
 def predict_ui():

@@ -10,7 +10,6 @@
         font-family: Segoe UI;
       }
 
-      /* SIDEBAR */
       .sidebar {
         width: 240px;
         background: #0f172a;
@@ -31,14 +30,12 @@
         background: #1e293b;
       }
 
-      /* MAIN */
       .main {
         margin-left: 260px;
         padding: 20px;
         background: #f1f5f9;
       }
 
-      /* CARDS */
       .cards {
         display: flex;
         gap: 10px;
@@ -54,7 +51,6 @@
         text-align: center;
       }
 
-      /* FORM */
       .form-box {
         background: white;
         padding: 20px;
@@ -74,47 +70,16 @@
         color: white;
         border: none;
       }
-
-      /* CHART GRID */
-      .chart-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-      }
-
-      .chart-card {
-        background: white;
-        padding: 15px;
-        border-radius: 10px;
-      }
-
-      .chart-card.full {
-        grid-column: span 2;
-      }
-
-      canvas {
-        max-height: 250px !important;
-      }
-
-      .section {
-        display: none;
-      }
-      .active {
-        display: block;
-      }
     </style>
   </head>
 
   <body>
     <div class="sidebar">
       <h2>💳 FraudSys</h2>
-
-      <a onclick="show('detect')">Detection</a>
-      <a onclick="show('insights')">Insights</a>
-      <a onclick="show('about')">About</a>
-
+      <a href="/">Detection</a>
+      <a href="/insights">Insights</a>
+      <a href="/about">About</a>
       <hr />
-
       <a href="/download_report">Download Report</a>
       <a href="/logout">Logout</a>
     </div>
@@ -127,89 +92,21 @@
         <div class="card">{{percent}}%</div>
       </div>
 
-      <!-- DETECT -->
-      <div id="detect" class="section active">
-        <div class="form-box">
-          <form method="post" action="/predict_ui">
-            <input name="amount" placeholder="Amount" required />
-            <input name="time" placeholder="Time" required />
-            <input name="location" placeholder="Location" required />
-            <input name="device" placeholder="Device" required />
-            <input name="history" placeholder="History" required />
-            <button>Analyze</button>
-          </form>
+      <div class="form-box">
+        <form method="post" action="/predict_ui">
+          <input name="amount" placeholder="Amount" required />
+          <input name="time" placeholder="Time" required />
+          <input name="location" placeholder="Location" required />
+          <input name="device" placeholder="Device" required />
+          <input name="history" placeholder="History" required />
+          <button>Analyze</button>
+        </form>
 
-          {% if result %}
-          <p>{{result}}</p>
-          <p>{{explanation}}</p>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- INSIGHTS -->
-      <div id="insights" class="section">
-        <div class="chart-grid">
-          <div class="chart-card">
-            <canvas id="pie"></canvas>
-          </div>
-
-          <div class="chart-card">
-            <canvas id="bar"></canvas>
-          </div>
-
-          <div class="chart-card full">
-            <canvas id="line"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- ABOUT -->
-      <div id="about" class="section">
-        <h3>About</h3>
-        <p>
-          This system detects fraud using machine learning and behavioral
-          analytics.
-        </p>
+        {% if result %}
+        <p>{{result}}</p>
+        <p>{{explanation}}</p>
+        {% endif %}
       </div>
     </div>
-
-    <script>
-      function show(id) {
-        document
-          .querySelectorAll(".section")
-          .forEach((s) => s.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-      }
-
-      const fraud = parseInt("{{fraud}}") || 0;
-      const safe = parseInt("{{safe}}") || 0;
-
-      new Chart(document.getElementById("pie"), {
-        type: "doughnut",
-        data: {
-          labels: ["Fraud", "Safe"],
-          datasets: [{ data: [fraud, safe] }],
-        },
-        options: { responsive: true, maintainAspectRatio: false },
-      });
-
-      new Chart(document.getElementById("bar"), {
-        type: "bar",
-        data: {
-          labels: ["Fraud", "Safe"],
-          datasets: [{ data: [fraud, safe] }],
-        },
-        options: { responsive: true, maintainAspectRatio: false },
-      });
-
-      new Chart(document.getElementById("line"), {
-        type: "line",
-        data: {
-          labels: ["Start", "Mid", "Now"],
-          datasets: [{ data: [0, (fraud + safe) / 2, fraud + safe] }],
-        },
-        options: { responsive: true, maintainAspectRatio: false },
-      });
-    </script>
   </body>
 </html>
