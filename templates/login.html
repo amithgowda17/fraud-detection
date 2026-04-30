@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<style>
+body{background:#2a5298;text-align:center;}
+.box{background:white;padding:30px;width:300px;margin:100px auto;}
+</style>
+</head>
+<body>
+<div class="box">
+<h2>Login</h2>
+<form method="post">
+<input name="username" placeholder="Username"><br>
+<input type="password" name="password" placeholder="Password"><br>
+<button>Login</button>
+</form>
+{% if error %}<p style="color:red">{{error}}</p>{% endif %}
+</div>
+</body>
+</html>

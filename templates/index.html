@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Fraud Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {font-family:Arial;background:#2a5298;text-align:center;color:white;}
+.container {background:white;color:black;width:450px;margin:40px auto;padding:20px;border-radius:10px;}
+input{width:90%;padding:8px;margin:5px;}
+button{width:95%;padding:10px;background:#2a5298;color:white;border:none;}
+table{width:100%;margin-top:10px;font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+<a href="/logout">Logout</a>
+<h2>Fraud Detection Dashboard</h2>
+
+<form action="/predict_ui" method="post">
+<input type="number" name="amount" placeholder="Amount" required>
+<input type="number" name="time" placeholder="Time" required>
+<input type="number" name="location" placeholder="Location Distance" required>
+<input type="number" name="device" placeholder="Device" required>
+<input type="number" name="history" placeholder="Previous Fraud" required>
+<button type="submit">Analyze</button>
+</form>
+
+{% if result %}
+<p>{{ result }}</p>
+{% endif %}
+
+<h3>Transactions</h3>
+<table border="1">
+<tr><th>A</th><th>T</th><th>L</th><th>D</th><th>H</th><th>R</th></tr>
+{% for row in history %}
+<tr>{% for item in row %}<td>{{item}}</td>{% endfor %}</tr>
+{% endfor %}
+</table>
+
+<canvas id="chart"></canvas>
+
+<script>
+new Chart(document.getElementById("chart"),{
+type:"pie",
+data:{labels:["Fraud","Safe"],datasets:[{data:[{{fraud}},{{safe}}],backgroundColor:["red","green"]}]}
+});
+</script>
+
+</div>
+</body>
+</html>
