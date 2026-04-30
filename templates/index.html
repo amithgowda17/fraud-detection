@@ -1,52 +1,194 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-<title>Fraud Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body {font-family:Arial;background:#2a5298;text-align:center;color:white;}
-.container {background:white;color:black;width:450px;margin:40px auto;padding:20px;border-radius:10px;}
-input{width:90%;padding:8px;margin:5px;}
-button{width:95%;padding:10px;background:#2a5298;color:white;border:none;}
-table{width:100%;margin-top:10px;font-size:12px;}
-</style>
-</head>
-<body>
+  <head>
+    <title>Fraud System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="container">
-<a href="/logout">Logout</a>
-<h2>Fraud Detection Dashboard</h2>
+    <style>
+      body {
+        margin: 0;
+        font-family: Segoe UI;
+        display: flex;
+        background: #f1f5f9;
+      }
 
-<form action="/predict_ui" method="post">
-<input type="number" name="amount" placeholder="Amount" required>
-<input type="number" name="time" placeholder="Time" required>
-<input type="number" name="location" placeholder="Location Distance" required>
-<input type="number" name="device" placeholder="Device" required>
-<input type="number" name="history" placeholder="Previous Fraud" required>
-<button type="submit">Analyze</button>
-</form>
+      .sidebar {
+        width: 240px;
+        background: #0f172a;
+        color: white;
+        height: 100vh;
+        padding: 20px;
+        transition: 0.3s;
+      }
+      .sidebar.collapsed {
+        width: 70px;
+      }
+      .sidebar a {
+        display: block;
+        color: white;
+        padding: 10px;
+        text-decoration: none;
+      }
+      .sidebar a:hover {
+        background: #1e293b;
+      }
 
-{% if result %}
-<p>{{ result }}</p>
-{% endif %}
+      .text {
+        margin-left: 10px;
+      }
+      .sidebar.collapsed .text {
+        display: none;
+      }
 
-<h3>Transactions</h3>
-<table border="1">
-<tr><th>A</th><th>T</th><th>L</th><th>D</th><th>H</th><th>R</th></tr>
-{% for row in history %}
-<tr>{% for item in row %}<td>{{item}}</td>{% endfor %}</tr>
-{% endfor %}
-</table>
+      .main {
+        flex: 1;
+        padding: 20px;
+      }
 
-<canvas id="chart"></canvas>
+      .cards {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .card {
+        flex: 1;
+        min-width: 120px;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+      }
 
-<script>
-new Chart(document.getElementById("chart"),{
-type:"pie",
-data:{labels:["Fraud","Safe"],datasets:[{data:[{{fraud}},{{safe}}],backgroundColor:["red","green"]}]}
-});
-</script>
+      .form-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+      }
 
-</div>
-</body>
+      input {
+        width: 95%;
+        padding: 10px;
+        margin: 5px;
+      }
+      button {
+        padding: 10px;
+        background: #2563eb;
+        color: white;
+        border: none;
+      }
+
+      .section {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+
+      .chart-box {
+        max-width: 500px;
+        margin: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="sidebar" id="sidebar">
+      <h2>💳</h2>
+      <a onclick="show('detect')">🔍 <span class="text">Detection</span></a>
+      <a onclick="show('insights')">📊 <span class="text">Insights</span></a>
+      <a onclick="show('about')">ℹ️ <span class="text">About</span></a>
+      <hr />
+      <a href="/logout">🚪 <span class="text">Logout</span></a>
+    </div>
+
+    <div class="main">
+      <button onclick="toggle()">☰</button>
+
+      <div class="cards">
+        <div class="card">Total {{total}}</div>
+        <div class="card">Fraud {{fraud}}</div>
+        <div class="card">Safe {{safe}}</div>
+        <div class="card">{{percent}}%</div>
+      </div>
+
+      <!-- DETECT -->
+      <div id="detect" class="section active">
+        <div class="form-box">
+          <form method="post" action="/predict_ui">
+            <input name="amount" placeholder="Amount" required />
+            <input name="time" placeholder="Time" required />
+            <input name="location" placeholder="Location" required />
+            <input name="device" placeholder="Device" required />
+            <input name="history" placeholder="History" required />
+            <button>Analyze</button>
+          </form>
+
+          {% if result %}
+          <p>{{result}}</p>
+          <p>{{explanation}}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- INSIGHTS -->
+      <div id="insights" class="section">
+        <a href="/download_report"><button>📄 Download Report</button></a>
+
+        <div class="chart-box"><canvas id="pie"></canvas></div>
+        <div class="chart-box"><canvas id="bar"></canvas></div>
+        <div class="chart-box"><canvas id="line"></canvas></div>
+      </div>
+
+      <!-- ABOUT -->
+      <div id="about" class="section">
+        <h3>About</h3>
+        <p>This ML system detects fraud using behavioral patterns.</p>
+        <ul>
+          <li>AI fraud detection</li>
+          <li>Real-time monitoring</li>
+          <li>Behavior analytics</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      function show(id) {
+        document
+          .querySelectorAll(".section")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+      }
+      function toggle() {
+        document.getElementById("sidebar").classList.toggle("collapsed");
+      }
+
+      const fraud = parseInt("{{fraud}}") || 0;
+      const safe = parseInt("{{safe}}") || 0;
+
+      new Chart(document.getElementById("pie"), {
+        type: "doughnut",
+        data: {
+          labels: ["Fraud", "Safe"],
+          datasets: [{ data: [fraud, safe] }],
+        },
+      });
+
+      new Chart(document.getElementById("bar"), {
+        type: "bar",
+        data: {
+          labels: ["Fraud", "Safe"],
+          datasets: [{ data: [fraud, safe] }],
+        },
+      });
+
+      new Chart(document.getElementById("line"), {
+        type: "line",
+        data: {
+          labels: ["Start", "Mid", "Now"],
+          datasets: [{ data: [0, (fraud + safe) / 2, fraud + safe] }],
+        },
+      });
+    </script>
+  </body>
 </html>
