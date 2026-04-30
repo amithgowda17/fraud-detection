@@ -1,55 +1,50 @@
 <!doctype html>
 <html>
   <head>
-    <title>Fraud System</title>
+    <title>Fraud Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
       body {
         margin: 0;
         font-family: Segoe UI;
-        display: flex;
-        background: #f1f5f9;
       }
 
+      /* SIDEBAR */
       .sidebar {
         width: 240px;
         background: #0f172a;
         color: white;
         height: 100vh;
+        position: fixed;
         padding: 20px;
-        transition: 0.3s;
       }
-      .sidebar.collapsed {
-        width: 70px;
-      }
+
       .sidebar a {
         display: block;
-        color: white;
         padding: 10px;
+        color: white;
         text-decoration: none;
       }
+
       .sidebar a:hover {
         background: #1e293b;
       }
 
-      .text {
-        margin-left: 10px;
-      }
-      .sidebar.collapsed .text {
-        display: none;
-      }
-
+      /* MAIN */
       .main {
-        flex: 1;
+        margin-left: 260px;
         padding: 20px;
+        background: #f1f5f9;
       }
 
+      /* CARDS */
       .cards {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
       }
+
       .card {
         flex: 1;
         min-width: 120px;
@@ -59,6 +54,7 @@
         text-align: center;
       }
 
+      /* FORM */
       .form-box {
         background: white;
         padding: 20px;
@@ -71,11 +67,33 @@
         padding: 10px;
         margin: 5px;
       }
+
       button {
         padding: 10px;
         background: #2563eb;
         color: white;
         border: none;
+      }
+
+      /* CHART GRID */
+      .chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .chart-card {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+      }
+
+      .chart-card.full {
+        grid-column: span 2;
+      }
+
+      canvas {
+        max-height: 250px !important;
       }
 
       .section {
@@ -84,27 +102,24 @@
       .active {
         display: block;
       }
-
-      .chart-box {
-        max-width: 500px;
-        margin: auto;
-      }
     </style>
   </head>
 
   <body>
-    <div class="sidebar" id="sidebar">
-      <h2>💳</h2>
-      <a onclick="show('detect')">🔍 <span class="text">Detection</span></a>
-      <a onclick="show('insights')">📊 <span class="text">Insights</span></a>
-      <a onclick="show('about')">ℹ️ <span class="text">About</span></a>
+    <div class="sidebar">
+      <h2>💳 FraudSys</h2>
+
+      <a onclick="show('detect')">Detection</a>
+      <a onclick="show('insights')">Insights</a>
+      <a onclick="show('about')">About</a>
+
       <hr />
-      <a href="/logout">🚪 <span class="text">Logout</span></a>
+
+      <a href="/download_report">Download Report</a>
+      <a href="/logout">Logout</a>
     </div>
 
     <div class="main">
-      <button onclick="toggle()">☰</button>
-
       <div class="cards">
         <div class="card">Total {{total}}</div>
         <div class="card">Fraud {{fraud}}</div>
@@ -133,22 +148,28 @@
 
       <!-- INSIGHTS -->
       <div id="insights" class="section">
-        <a href="/download_report"><button>📄 Download Report</button></a>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <canvas id="pie"></canvas>
+          </div>
 
-        <div class="chart-box"><canvas id="pie"></canvas></div>
-        <div class="chart-box"><canvas id="bar"></canvas></div>
-        <div class="chart-box"><canvas id="line"></canvas></div>
+          <div class="chart-card">
+            <canvas id="bar"></canvas>
+          </div>
+
+          <div class="chart-card full">
+            <canvas id="line"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- ABOUT -->
       <div id="about" class="section">
         <h3>About</h3>
-        <p>This ML system detects fraud using behavioral patterns.</p>
-        <ul>
-          <li>AI fraud detection</li>
-          <li>Real-time monitoring</li>
-          <li>Behavior analytics</li>
-        </ul>
+        <p>
+          This system detects fraud using machine learning and behavioral
+          analytics.
+        </p>
       </div>
     </div>
 
@@ -158,9 +179,6 @@
           .querySelectorAll(".section")
           .forEach((s) => s.classList.remove("active"));
         document.getElementById(id).classList.add("active");
-      }
-      function toggle() {
-        document.getElementById("sidebar").classList.toggle("collapsed");
       }
 
       const fraud = parseInt("{{fraud}}") || 0;
@@ -172,6 +190,7 @@
           labels: ["Fraud", "Safe"],
           datasets: [{ data: [fraud, safe] }],
         },
+        options: { responsive: true, maintainAspectRatio: false },
       });
 
       new Chart(document.getElementById("bar"), {
@@ -180,6 +199,7 @@
           labels: ["Fraud", "Safe"],
           datasets: [{ data: [fraud, safe] }],
         },
+        options: { responsive: true, maintainAspectRatio: false },
       });
 
       new Chart(document.getElementById("line"), {
@@ -188,6 +208,7 @@
           labels: ["Start", "Mid", "Now"],
           datasets: [{ data: [0, (fraud + safe) / 2, fraud + safe] }],
         },
+        options: { responsive: true, maintainAspectRatio: false },
       });
     </script>
   </body>
